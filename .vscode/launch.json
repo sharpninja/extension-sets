@@ -6,6 +6,41 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Attach to Edge",
+			"port": 9222,
+			"request": "attach",
+			"type": "pwa-msedge",
+			"webRoot": "${workspaceFolder}/src/Blazor/wwwroot",
+			"preLaunchTask": "blazor"
+		},
+		{
+			"name": ".NET Core Launch (web)",
+			"type": "coreclr",
+			"request": "launch",
+			"program": "dotnet watch",
+			"args": [],
+			"cwd": "${workspaceFolder}/src/Blazor",
+			"stopAtEntry": false,
+			"serverReadyAction": {
+				"action": "openExternally",
+				"pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+			},
+			"env": {
+				"ASPNETCORE_ENVIRONMENT": "Development"
+			},
+			"sourceFileMap": {
+				"/Views": "${workspaceFolder}/Views"
+			}
+		},
+	{
+		"name": "Launch Edge",
+		"request": "launch",
+		"type": "pwa-msedge",
+		"url": "http://localhost:5275/",
+		"webRoot": "${workspaceFolder}/src/Blazor/wwwroot"
+	},
+
+	{
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",

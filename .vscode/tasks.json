@@ -11,10 +11,28 @@
 			"presentation": {
 				"reveal": "never"
 			},
+			"group": "build",
+			"label": "npm: watch",
+			"detail": "tsc -watch -p ./"
+		},
+		{
+			"type": "npm",
+			"script": "blazor",
+			"problemMatcher": [],
+			"label": "blazor",
+			"detail": "cd ${workspaceFolder}/src/Blazor && dotnet watch",
+			"group": "build"
+		},
+		{
+			"type": "npm",
+			"script": "compile",
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"problemMatcher": [],
+			"label": "npm: compile",
+			"detail": "tsc -p ./ && dotnet publish ./src/Blazor/Blazor.csproj -c Release -o ./out/blazor/"
 		}
 	]
 }

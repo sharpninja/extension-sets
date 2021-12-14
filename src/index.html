@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Extension Sets</title>
+        <style>
+            .disabled {
+                filter: brightness(0.2)
+            }
+
+            summary h2 {
+                display: inline-block;
+            }
+
+            .grid_container {
+                display: grid;
+                grid-gap: 50px 100px;
+                position: fixed;
+                top: 150px;
+                left: 8px;
+                right: 8px;
+                bottom: 8px;
+            }
+
+            header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 150px;
+                background-color: var(--vscode-focusBorder);
+                color: var(--vscode-textSeparator-foreground);
+            }
+
+            header h1 {
+                color: var(--vscode-foreground);
+            }
+
+            div.grid_box {
+                grid-row: 1;
+            }
+
+            #all {
+                grid-column-start: 1;
+                grid-column-end: 1;
+                width: 100%;
+                background-color: var(--vscode-activityBar-background) brightness(25%);
+                overflow-y: scroll;
+            }
+
+            #filtered {
+                grid-column-start: 2;
+                grid-column-end: 2;
+                width: 100%;
+                background-color: var(--vscode-activityBar-background) brightness(25%);
+                overflow-y: scroll;
+            }
+
+            .title {
+                font-weight: bolder;
+                font-size: larger;
+                background-color: grayscale(0.20);
+            }
+
+            details {
+                margin: 5px;
+                margin-bottom: 10px;
+                padding: 4px;
+                background-color: var(--vscode-activityBar-background);
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <H1>Extension Sets</H1>
+            <input type="search" title="Find installed extension." id="txtSearch" />
+            <button class="btn"
+                onclick="document.sendFind([{ __type: 'Language', Data: { Value: document.getElementById('txtSearch').value } }])">Search</button>
+        </header>
+        <article>
+            <main class="grid_container">
+
+                <div id="all" class="grid_box">
+                    <h1>All Extensions</h1>
+                    <ul>
+
+                    </ul>
+                </div>
+                <div id="filtered" class="grid_box">
+                    <H1>Filtered</H1>
+                    <ul>
+
+                    </ul>
+                </div>
+            </main>
+            <script type="text/javascript">
+                // debugger
+                const vscode = acquireVsCodeApi();
+                console.log('Start SCRIPT tag');
+
+                document.getDetails = function (id) {
+
+                    let count = 0;
+
+                    setTimeout(async () => {
+                        // debugger
+                        const command = "item";
+                        let result = await vscode.postMessage({
+                            command: command,
+                            text: id.slice(id.indexOf('_')+1)
+                        });
+                    }, 100);
+                }
+
+                document.showList = function (id, list) {
+                    if (list === list.toString()) {
+                        list = list.split(",").map(item => { return item.trim() });
+                    }
+                    const div = document.getElementById(id);
+                    let item = null;
+                    for (item of list) {
+                        const details = document.createElement("details");
+                        const summary = document.createElement("summary");
+                        const h2 = document.createElement("h2");
+                        h2.innerText = item;
+                        summary.appendChild(h2);
+                        details.appendChild(summary);
+                        details.id = id + '_' + item;
+                        details.addEventListener("click", (ev) => { document.getDetails(ev.currentTarget.id) });
+                        div.appendChild(details)
+                    }
+                }
+
+                document.setDetails = function (data) {
+                    // debugger
+                    const prefixes = ["all_", "filtered_"]
+                    for (prefix of prefixes) {
+                        var details = document.getElementById(prefix + data.id);
+
+                        var toDelete = details.getElementsByTagName("details");
+
+                        toDelete.forEach((details)=>{ details.parentElement.removeChild(details);})
+
+                        if (!details.data) {
+                            details.data = data;
+                            const title = data.packageJSON.displayName ?? data.packageJSON.name;
+                            const description = data.packageJSON.description ?? "No description.";
+                            details.open = "open";
+                            const nameNode = document.createElement("div");
+                            nameNode.innerText = title;
+                            nameNode.classList.add("title");
+                            const descNode = document.createElement("p");
+                            descNode.innerText = description;
+                            details.appendChild(nameNode);
+                            details.appendChild(descNode);
+                            if (!(data.isActive ?? true)) {
+                                details.classList.add("disabled")
+                            } else {
+                                details.classList.remove("disabled")
+                            }
+                        }
+                    }
+                }
+
+                window.addEventListener(
+                    'message',
+                    event => {
+                        // debugger
+
+                        try {
+                            const message = JSON.parse(event.data); // The JSON data our extension sent
+
+                            switch (message.response) {
+                                case 'item':
+                                    document.setDetails(message.data);
+                                    break;
+
+                                case 'find':
+                                    const filtered = message.data;
+                                    document.showList("filtered", filtered);
+                                    break;
+
+                                case 'all':
+                                    const all = message.data;
+                                    document.showList("all", all);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        } catch (err) {
+                            // debugger
+                            console.error(err);
+                            document.sendLog(err);
+                        }
+                    });
+
+                document.getAll = function () {
+                    setTimeout(async () => {
+                        // debugger
+
+                        const command = "all";
+                        let result = await vscode.postMessage({
+                            command: command,
+                        });
+
+                        console.log("Leaving getAll()");
+                    }, 100);
+                }
+
+                document.sendFind = (filter) => {
+                    // debugger
+                    console.log(`Entering sendFind(${filter})`);
+
+                    let count = 0;
+
+                    setTimeout(async () => {
+                        // debugger
+                        console.log(filter);
+                        const command = (filter) ? "find" : "all";
+                        let result = await vscode.postMessage({
+                            command: command,
+                            text: JSON.stringify(filter)
+                        });
+                    }, 100);
+
+                    console.log("Leaving sendFind()");
+                }
+
+                document.sendLog = (message) => {
+                    let count = 0;
+                    const isError = message instanceof Error;
+                    const json = !isError
+                        ? message.toString()
+                        : {
+                            errorMessage: message.name,
+                            errorStack: message.stack
+                        };
+
+                    setTimeout(async () => {
+                        const command = isError ? "error" : "log";
+                        let result = await vscode.postMessage({
+                            command: command,
+                            text: json
+                        });
+                    }, 100);
+                }
+
+                // const sendFilter = [{ __type: "Language", Data: { Value: "json" } }];
+                // document.sendFind(sendFilter);
+                document.getAll();
+                console.log('leaving SCRIPT tag');
+            </script>
+        </article>
+    </body>
+
+</html>
